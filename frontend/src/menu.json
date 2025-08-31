@@ -1,0 +1,44 @@
+{
+  "Monday": {
+    "Breakfast": "Mixed Paratha, Butter, Cornflakes, Chutney, Milk",
+    "Lunch": "Dal Makhni, Curd, Sambhar, Rice",
+    "Snacks": "Matri, Chai Mix-Veg, Chana Dal, Roti, Chawal, Sweets (Pyaaz Salad)",
+    "Dinner": "(Evening)"
+  },
+  "Tuesday": {
+    "Breakfast": "Sandwich, Butter Bread, Sauce, Milk, Fruits",
+    "Lunch": "Kale Chane, Chawal, Dahi, Roti, Aalu jeera",
+    "Snacks": "Tea, Samosa",
+    "Dinner": "Chole ki Sabzi, Roti, Masoor Dal, Chawal, Kheer (Nimbu-Pyaaz Salad)"
+  },
+  "Wednesday": {
+    "Breakfast": "Paneer Bhurji, Milk, Plain Paratha",
+    "Lunch": "Mah-Chana Dal, Pakoda, Kadhi, Rice",
+    "Snacks": "Pastry/Kurkure, Coffee",
+    "Dinner": "Chilli Paneer/Chilli Chicken, Moong Dal, Chawal, Roti (Pyaaz Salad)"
+  },
+  "Thursday": {
+    "Breakfast": "Pav Bhaji, Milk, Cornflakes, Fruits",
+    "Lunch": "Aloo Puri, Rice, Buttermilk",
+    "Snacks": "Onion Kachori, Chai",
+    "Dinner": "Fried Rice, Dal Makhni, Dam Aalo, Roti, Moong Dal ka Halwa/Suji/Gajar (Pyaaz Salad)"
+  },
+  "Friday": {
+    "Breakfast": "Aloo Paratha, Butter, Chutney, Tea",
+    "Lunch": "Rajma-Chawal, Raita, Papad",
+    "Snacks": "Namkeen, Chai",
+    "Dinner": "Matar Paneer/Chicken, Roti, Masoor Dal, Chawal (Pyaaz Salad)"
+  },
+  "Saturday": {
+    "Breakfast": "Daliya, Poha, Sauce, Banana",
+    "Lunch": "Chole-Bhature, Raita, Chawal, Chatni",
+    "Snacks": "Chips, Juice",
+    "Dinner": "Seasonal Veg, Roti, Tadka Arhar Dal, Fried Rice (Pyaaz Salad)"
+  },
+  "Sunday": {
+    "Breakfast": "Aaloo Vada, Boiled Egg, Kaale Chane, Milk",
+    "Lunch": "Veg/Non-Veg Biryani, Raita",
+    "Snacks": "Biscuit, Coffee",
+    "Dinner": "Aloo-Matar Ki Sabzi, Tadka Mah Dal, Roti, Chawal, Seviyan (Pyaaz Salad)"
+  }
+}
