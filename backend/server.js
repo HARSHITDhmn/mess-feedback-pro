@@ -16,7 +16,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.get('/', (req, res) => res.json({status:'ok', service:'mess-feedback-backend'}));
 
 const { MONGO_URI = 'mongodb://127.0.0.1:27017/messFeedback', PORT = 5000 } = process.env;
-mongoose.connect(MONGO_URI).then(async ()=>{
+mongoose.connect("mongodb+srv://HARSHITUser:<MANJUd12345>@cluster0.emmwtxt.mongodb.net/…", options).then(async ()=>{
   console.log('MongoDB connected');
   // create default admin if not exists
   const username = process.env.DEFAULT_ADMIN_USERNAME || 'HARSHIT';
