@@ -16,11 +16,29 @@ app.use('/api/auth', require('./routes/auth'));
 app.get('/', (req, res) => res.json({status:'ok', service:'mess-feedback-backend'}));
 
 const { MONGO_URI = 'mongodb://127.0.0.1:27017/messFeedback', PORT = 5000 } = process.env;
-mongoose.connect("mongodb+srv://HARSHITUser:<MANJUd12345>@cluster0.emmwtxt.mongodb.net/…", options).then(async ()=>{
-  console.log('MongoDB connected');
-  // create default admin if not exists
-  const username = process.env.DEFAULT_ADMIN_USERNAME || 'HARSHIT';
-  const password = process.env.DEFAULT_ADMIN_PASSWORD || 'MANJUd12345@@';
+
+mongoose.connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(async () => {
+    console.log('MongoDB connected');
+    // create default admin if not exists
+    const username = process.env.DEFAULT_ADMIN_USERNAME || 'HARSHIT';
+    const password = process.env.DEFAULT_ADMIN_PASSWORD || 'MANJUd12345@@';
+
+    const existing = await Admin.findOne({ username });
+    if (!existing) {
+        const hashed = await bcrypt.hash(password, 10);
+        await Admin.create({ username, password: hashed });
+        console.log('Default admin created ->', username);
+    } else {
+        console.log('Default admin exists ->', username);
+    }
+})
+.catch((err) => {
+    console.error('MongoDB connection error:', err);
+});
   const existing = await Admin.findOne({ username });
   if(!existing){
     const hashed = await bcrypt.hash(password, 10);
