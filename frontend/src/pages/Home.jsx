@@ -17,26 +17,36 @@ export default function Home() {
 
   const submit = async (e) => {
     e.preventDefault();
+
     try {
-      // ✅ Get reCAPTCHA token
-      const token = await window.grecaptcha.execute(
-        "6Lcl_70rAAAAAMg7cdY0o6dL_svcGmSFZFkmIKkT",   // 🔹 replace with your real site key
-        { action: "submit" }
-      );
+      // ✅ Get reCAPTCHA response (v2 checkbox injects this)
+      const token = document.querySelector('#g-recaptcha-response').value;
+
+      if (!token) {
+        setToast({ msg: '⚠️ Please complete the reCAPTCHA', type: 'error' });
+        setTimeout(() => setToast(null), 3000);
+        return;
+      }
 
       // ✅ Send form + token to backend
-      await api.post('/api/complaints', { 
-        day: selected, 
-        meal, 
-        ...form, 
-        "g-recaptcha-response": token 
+      await api.post('/api/complaints', {
+        day: selected,
+        meal,
+        ...form,
+        'g-recaptcha-response': token,
       });
 
       setToast({ msg: '✅ Complaint submitted', type: 'success' });
       setForm({ name: '', rollNo: '', complaint: '' });
+
+      // Reset captcha after successful submission
+      if (window.grecaptcha) {
+        window.grecaptcha.reset();
+      }
     } catch (err) {
       setToast({ msg: '❌ Failed to submit. Try again.', type: 'error' });
     }
+
     setTimeout(() => setToast(null), 3000);
   };
 
@@ -101,8 +111,20 @@ export default function Home() {
             placeholder="What was wrong with the dish?"
             required
           />
+
+          {/* ✅ reCAPTCHA v2 widget */}
+          <div
+            className="g-recaptcha"
+            data-sitekey="YOUR_SITE_KEY_HERE"
+            style={{ margin: '1rem 0' }}
+          ></div>
+
           <button className="btn" type="submit">
             Submit complaint
           </button>
         </form>
-        <Toast msg={toast && toast.m
+        <Toast msg={toast && toast.msg} type={toast && toast.type} />
+      </div>
+    </div>
+  );
+}
