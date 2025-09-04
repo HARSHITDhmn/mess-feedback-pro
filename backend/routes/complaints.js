@@ -1,15 +1,35 @@
 const express = require('express');
 const router = express.Router();
+const axios = require('axios');
 const Complaint = require('../models/Complaint');
 const auth = require('../middleware/auth');
 
 // submit public
 router.post('/', async (req, res) => {
   try {
-    const { day, meal, name, rollNo, complaint } = req.body;
-    if (!day || !meal || !complaint) return res.status(400).json({ msg: 'Missing required fields' });
+    const { day, meal, name, rollNo, complaint, token } = req.body;
+
+    if (!day || !meal || !complaint) {
+      return res.status(400).json({ msg: 'Missing required fields' });
+    }
+
+    if (!token) {
+      return res.status(400).json({ msg: 'Captcha token missing' });
+    }
+
+    // Verify captcha with Google
+    const secret = process.env.RECAPTCHA_SECRET_KEY;
+    const verifyURL = `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${token}`;
+
+    const response = await axios.post(verifyURL);
+    if (!response.data.success) {
+      return res.status(400).json({ msg: 'Captcha verification failed' });
+    }
+
+    // Save complaint in DB
     const doc = await Complaint.create({ day, meal, name, rollNo, complaint });
     res.status(201).json({ msg: 'Complaint created', id: doc._id });
+
   } catch (e) {
     res.status(500).json({ msg: e.message });
   }
