@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import api from '../utils/api';
 import menu from '../menu.json';
 
@@ -14,35 +14,21 @@ export default function Home() {
   const [form, setForm] = useState({ name: '', rollNo: '', complaint: '' });
   const [meal, setMeal] = useState('Breakfast');
   const [toast, setToast] = useState(null);
-  const [captchaToken, setCaptchaToken] = useState('');
-
-  // ✅ Setup global reCAPTCHA callbacks
-  useEffect(() => {
-    window.onRecaptchaSuccess = (token) => {
-      console.log("Captcha success:", token);
-      setCaptchaToken(token);
-    };
-    window.onRecaptchaExpired = () => {
-      console.log("Captcha expired");
-      setCaptchaToken('');
-    };
-  }, []);
 
   const submit = async (e) => {
     e.preventDefault();
 
     try {
-      const token =
-        captchaToken ||
-        (window.grecaptcha ? window.grecaptcha.getResponse() : '');
+      // ✅ Always get fresh reCAPTCHA token
+      const token = window.grecaptcha.getResponse();
 
       if (!token) {
-        setToast({ msg: '⚠️ Please complete the reCAPTCHA', type: 'error' });
+        setToast({ msg: '⚠️ Please tick "I am not a robot"', type: 'error' });
         setTimeout(() => setToast(null), 3000);
         return;
       }
 
-      // ✅ Send form + captcha token
+      // ✅ Send form + token to backend
       await api.post('/api/complaints', {
         day: selected,
         meal,
@@ -53,12 +39,10 @@ export default function Home() {
       setToast({ msg: '✅ Complaint submitted', type: 'success' });
       setForm({ name: '', rollNo: '', complaint: '' });
 
-      // Reset captcha
-      if (window.grecaptcha) {
-        window.grecaptcha.reset();
-      }
-      setCaptchaToken('');
+      // ✅ Reset reCAPTCHA for next submission
+      window.grecaptcha.reset();
     } catch (err) {
+      console.error('Submit error:', err);
       setToast({ msg: '❌ Failed to submit. Try again.', type: 'error' });
     }
 
@@ -127,12 +111,10 @@ export default function Home() {
             required
           />
 
-          {/* ✅ reCAPTCHA v2 widget */}
+          {/* ✅ reCAPTCHA v2 checkbox */}
           <div
             className="g-recaptcha"
-            data-sitekey="6LfZN74rAAAAAJiRRNdmYRgPka5u-mnlxfjKwwYB" // 🔹 your site key
-            data-callback="onRecaptchaSuccess"
-            data-expired-callback="onRecaptchaExpired"
+            data-sitekey="6LfZN74rAAAAAJiRRNdmYRgPka5u-mnlxfjKwwYB"
             style={{ margin: '1rem 0' }}
           ></div>
 
