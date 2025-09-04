@@ -14,7 +14,9 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.1",
     "express-rate-limit": "^6.7.0",
-    "express-validator": "^7.0.1"
+    "express-validator": "^7.0.1",
+    "node-fetch": "^2.6.9"
+
 
 
   }
