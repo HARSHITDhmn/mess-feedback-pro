@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
+const fetch = require('node-fetch');   // ✅ for verifying reCAPTCHA with Google
 
 const Admin = require('./models/Admin');
 dotenv.config();
@@ -15,17 +16,43 @@ app.use(express.json());
 
 // 🛡️ Rate Limiting: Max 5 requests per minute per IP
 const limiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 5,              // limit each IP to 5 requests per windowMs
+    windowMs: 60 * 1000, 
+    max: 5,              
     message: { error: "Too many requests. Please try again later." }
 });
 app.use(limiter);
 
+// 🛡️ Middleware: reCAPTCHA verification
+const verifyCaptcha = async (req, res, next) => {
+    try {
+        const token = req.body["g-recaptcha-response"];
+        if (!token) {
+            return res.status(400).json({ error: "Missing reCAPTCHA token" });
+        }
+
+        const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+        const response = await fetch(
+            `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`,
+            { method: "POST" }
+        );
+        const data = await response.json();
+
+        if (!data.success) {
+            return res.status(400).json({ error: "Failed CAPTCHA verification" });
+        }
+
+        next(); // ✅ pass control if valid
+    } catch (err) {
+        console.error("CAPTCHA error:", err);
+        res.status(500).json({ error: "Server error verifying CAPTCHA" });
+    }
+};
+
 // 🛡️ Middleware to validate and sanitize complaint submissions
 const validateComplaint = [
-    body('message')
+    body('complaint')
         .isLength({ min: 1, max: 200 })
-        .withMessage('Message must be between 1 and 200 characters.')
+        .withMessage('Complaint must be between 1 and 200 characters.')
         .trim()
         .escape(),
     (req, res, next) => {
@@ -38,13 +65,20 @@ const validateComplaint = [
 ];
 
 // Routes
-// Attach validation to complaints POST route
-app.use('/api/complaints', (req, res, next) => {
-    if (req.method === 'POST') {
-        return validateComplaint[0](req, res, () => validateComplaint[1](req, res, next));
-    }
-    next();
-}, require('./routes/complaints'));
+app.use(
+    '/api/complaints', 
+    (req, res, next) => {
+        if (req.method === 'POST') {
+            return verifyCaptcha(req, res, () =>
+                validateComplaint[0](req, res, () =>
+                    validateComplaint[1](req, res, next)
+                )
+            );
+        }
+        next();
+    },
+    require('./routes/complaints')
+);
 
 app.use('/api/auth', require('./routes/auth'));
 
