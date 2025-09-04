@@ -5,6 +5,7 @@ const Complaint = require('../models/Complaint');
 const auth = require('../middleware/auth');
 
 // submit public
+// submit public
 router.post('/', async (req, res) => {
   try {
     const { day, meal, name, rollNo, complaint, token } = req.body;
@@ -17,11 +18,11 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ msg: 'Captcha token missing' });
     }
 
-    // Verify captcha
-    const secret = process.env.RECAPTCHA_SECRET_KEY;
+    // ✅ Verify captcha
+    const secret = process.env.RECAPTCHA_SECRET;
     const verifyURL = `https://www.google.com/recaptcha/api/siteverify`;
 
-    const response = await axios.post(
+    const { data } = await axios.post(
       verifyURL,
       new URLSearchParams({
         secret,
@@ -29,11 +30,12 @@ router.post('/', async (req, res) => {
       })
     );
 
-    if (!response.data.success) {
+    if (!data.success) {
+      console.error("Captcha failed:", data);
       return res.status(400).json({ msg: 'Captcha verification failed' });
     }
 
-    // Save complaint in DB
+    // ✅ Save complaint in DB
     const doc = await Complaint.create({ day, meal, name, rollNo, complaint });
     res.status(201).json({ msg: 'Complaint created', id: doc._id });
 
@@ -42,6 +44,7 @@ router.post('/', async (req, res) => {
     res.status(500).json({ msg: e.message });
   }
 });
+
 
 
 // list all - admin only
