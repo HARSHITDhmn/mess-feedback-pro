@@ -7,19 +7,20 @@ const auth = require('../middleware/auth');
 // submit public
 router.post('/', async (req, res) => {
   try {
-    const { day, meal, name, rollNo, complaint, token } = req.body;
+    const { day, meal, name, rollNo, complaint, token, 'g-recaptcha-response': gToken } = req.body;
+    const captchaToken = token || gToken;
 
     if (!day || !meal || !complaint) {
       return res.status(400).json({ msg: 'Missing required fields' });
     }
 
-    if (!token) {
+    if (!captchaToken) {
       return res.status(400).json({ msg: 'Captcha token missing' });
     }
 
     // Verify captcha with Google
-    const secret = process.env.RECAPTCHA_SECRET_KEY;
-    const verifyURL = `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${token}`;
+    const secret = process.env.RECAPTCHA_SECRET;
+    const verifyURL = `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${captchaToken}`;
 
     const response = await axios.post(verifyURL);
     if (!response.data.success) {
@@ -31,6 +32,7 @@ router.post('/', async (req, res) => {
     res.status(201).json({ msg: 'Complaint created', id: doc._id });
 
   } catch (e) {
+    console.error('Complaint route error:', e.message);
     res.status(500).json({ msg: e.message });
   }
 });
