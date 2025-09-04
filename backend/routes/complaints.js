@@ -7,22 +7,28 @@ const auth = require('../middleware/auth');
 // submit public
 router.post('/', async (req, res) => {
   try {
-    const { day, meal, name, rollNo, complaint, token, 'g-recaptcha-response': gToken } = req.body;
-    const captchaToken = token || gToken;
+    const { day, meal, name, rollNo, complaint, token } = req.body;
 
     if (!day || !meal || !complaint) {
       return res.status(400).json({ msg: 'Missing required fields' });
     }
 
-    if (!captchaToken) {
+    if (!token) {
       return res.status(400).json({ msg: 'Captcha token missing' });
     }
 
-    // Verify captcha with Google
+    // Verify captcha
     const secret = process.env.RECAPTCHA_SECRET;
-    const verifyURL = `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${captchaToken}`;
+    const verifyURL = `https://www.google.com/recaptcha/api/siteverify`;
 
-    const response = await axios.post(verifyURL);
+    const response = await axios.post(
+      verifyURL,
+      new URLSearchParams({
+        secret,
+        response: token,
+      })
+    );
+
     if (!response.data.success) {
       return res.status(400).json({ msg: 'Captcha verification failed' });
     }
@@ -36,6 +42,7 @@ router.post('/', async (req, res) => {
     res.status(500).json({ msg: e.message });
   }
 });
+
 
 // list all - admin only
 router.get('/', auth, async (req, res) => {
