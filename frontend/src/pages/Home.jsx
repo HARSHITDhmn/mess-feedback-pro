@@ -115,7 +115,7 @@ export default function Home() {
           {/* ✅ reCAPTCHA v2 widget */}
           <div
             className="g-recaptcha"
-            data-sitekey="YOUR_SITE_KEY_HERE"
+            data-sitekey="6Lcl_70rAAAAAMg7cdY0o6dL_svcGmSFZFkmIKkT"
             style={{ margin: '1rem 0' }}
           ></div>
 
