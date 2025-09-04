@@ -18,7 +18,7 @@ router.post('/', async (req, res) => {
     }
 
     // Verify captcha
-    const secret = process.env.RECAPTCHA_SECRET;
+    const secret = process.env.RECAPTCHA_SECRET_KEY;
     const verifyURL = `https://www.google.com/recaptcha/api/siteverify`;
 
     const response = await axios.post(
