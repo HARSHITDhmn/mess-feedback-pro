@@ -19,8 +19,8 @@ export default function Home() {
     e.preventDefault();
 
     try {
-      // ✅ Get reCAPTCHA response (v2 checkbox injects this)
-      const token = document.querySelector('#g-recaptcha-response').value;
+      // ✅ Get reCAPTCHA response (from v2 checkbox)
+      const token = window.grecaptcha.getResponse();
 
       if (!token) {
         setToast({ msg: '⚠️ Please complete the reCAPTCHA', type: 'error' });
@@ -33,7 +33,7 @@ export default function Home() {
         day: selected,
         meal,
         ...form,
-        'g-recaptcha-response': token,
+        token, // 👈 backend will validate this
       });
 
       setToast({ msg: '✅ Complaint submitted', type: 'success' });
@@ -115,7 +115,7 @@ export default function Home() {
           {/* ✅ reCAPTCHA v2 widget */}
           <div
             className="g-recaptcha"
-            data-sitekey="6Lcl_70rAAAAAMg7cdY0o6dL_svcGmSFZFkmIKkT"
+            data-sitekey="6Lcl_70rAAAAAMg7cdY0o6dL_svcGmSFZFkmIKkT" // 🔹 your site key here
             style={{ margin: '1rem 0' }}
           ></div>
 
