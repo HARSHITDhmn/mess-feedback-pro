@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
-const fetch = require('node-fetch');   // ✅ for verifying reCAPTCHA with Google
+const fetch = require('node-fetch');   // ✅ For verifying reCAPTCHA with Google
 
 const Admin = require('./models/Admin');
 dotenv.config();
@@ -17,7 +17,7 @@ app.use(express.json());
 // 🛡️ Rate Limiting: Max 5 requests per minute per IP
 const limiter = rateLimit({
     windowMs: 60 * 1000, 
-    max: 5,              
+    max: 5,
     message: { error: "Too many requests. Please try again later." }
 });
 app.use(limiter);
@@ -25,7 +25,7 @@ app.use(limiter);
 // 🛡️ Middleware: reCAPTCHA verification
 const verifyCaptcha = async (req, res, next) => {
     try {
-        const token = req.body["g-recaptcha-response"];
+        const token = req.body.token;   // ✅ Frontend must send { token: "..." }
         if (!token) {
             return res.status(400).json({ error: "Missing reCAPTCHA token" });
         }
@@ -38,6 +38,7 @@ const verifyCaptcha = async (req, res, next) => {
         const data = await response.json();
 
         if (!data.success) {
+            console.error("Captcha failed:", data);
             return res.status(400).json({ error: "Failed CAPTCHA verification" });
         }
 
@@ -66,7 +67,7 @@ const validateComplaint = [
 
 // Routes
 app.use(
-    '/api/complaints', 
+    '/api/complaints',
     (req, res, next) => {
         if (req.method === 'POST') {
             return verifyCaptcha(req, res, () =>
@@ -77,16 +78,16 @@ app.use(
         }
         next();
     },
-    require('./routes/complaints')
+    require('./routes/complaints')   // ✅ Using CommonJS
 );
 
 app.use('/api/auth', require('./routes/auth'));
 
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'mess-feedback-backend' }));
 
+// DB + Server Setup
 const { MONGO_URI = 'mongodb://127.0.0.1:27017/messFeedback', PORT = 5000 } = process.env;
 
-// Database & Server Setup
 mongoose.connect(MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
@@ -108,7 +109,7 @@ mongoose.connect(MONGO_URI, {
         }
 
         // Start server
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
     })
     .catch((err) => {
         console.error('MongoDB connection error:', err);
