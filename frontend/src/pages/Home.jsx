@@ -20,7 +20,7 @@ export default function Home() {
     try {
       // ✅ Get reCAPTCHA token
       const token = await window.grecaptcha.execute(
-        "YOUR_SITE_KEY",   // 🔹 replace with your real site key
+        "6Lcl_70rAAAAAMg7cdY0o6dL_svcGmSFZFkmIKkT",   // 🔹 replace with your real site key
         { action: "submit" }
       );
 
