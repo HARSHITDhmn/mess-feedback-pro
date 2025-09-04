@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import menu from '../menu.json';
 
@@ -14,13 +14,27 @@ export default function Home() {
   const [form, setForm] = useState({ name: '', rollNo: '', complaint: '' });
   const [meal, setMeal] = useState('Breakfast');
   const [toast, setToast] = useState(null);
+  const [captchaToken, setCaptchaToken] = useState('');
+
+  // ✅ Setup global reCAPTCHA callbacks
+  useEffect(() => {
+    window.onRecaptchaSuccess = (token) => {
+      console.log("Captcha success:", token);
+      setCaptchaToken(token);
+    };
+    window.onRecaptchaExpired = () => {
+      console.log("Captcha expired");
+      setCaptchaToken('');
+    };
+  }, []);
 
   const submit = async (e) => {
     e.preventDefault();
 
     try {
-      // ✅ Get reCAPTCHA response (from v2 checkbox)
-      const token = window.grecaptcha.getResponse();
+      const token =
+        captchaToken ||
+        (window.grecaptcha ? window.grecaptcha.getResponse() : '');
 
       if (!token) {
         setToast({ msg: '⚠️ Please complete the reCAPTCHA', type: 'error' });
@@ -28,21 +42,22 @@ export default function Home() {
         return;
       }
 
-      // ✅ Send form + token to backend
+      // ✅ Send form + captcha token
       await api.post('/api/complaints', {
         day: selected,
         meal,
         ...form,
-        token, // 👈 backend will validate this
+        token,
       });
 
       setToast({ msg: '✅ Complaint submitted', type: 'success' });
       setForm({ name: '', rollNo: '', complaint: '' });
 
-      // Reset captcha after successful submission
+      // Reset captcha
       if (window.grecaptcha) {
         window.grecaptcha.reset();
       }
+      setCaptchaToken('');
     } catch (err) {
       setToast({ msg: '❌ Failed to submit. Try again.', type: 'error' });
     }
@@ -115,7 +130,9 @@ export default function Home() {
           {/* ✅ reCAPTCHA v2 widget */}
           <div
             className="g-recaptcha"
-            data-sitekey="6LfZN74rAAAAAJiRRNdmYRgPka5u-mnlxfjKwwYB" // 🔹 your site key here
+            data-sitekey="6LfZN74rAAAAAJiRRNdmYRgPka5u-mnlxfjKwwYB" // 🔹 your site key
+            data-callback="onRecaptchaSuccess"
+            data-expired-callback="onRecaptchaExpired"
             style={{ margin: '1rem 0' }}
           ></div>
 
