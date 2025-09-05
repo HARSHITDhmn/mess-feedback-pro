@@ -1,72 +1,53 @@
 const express = require('express');
-const router = express.Router();
-const axios = require('axios');
-const Complaint = require('../models/Complaint');
-const auth = require('../middleware/auth');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
+const Admin = require('./models/Admin');
 
-// submit public
-// submit public
-router.post('/', async (req, res) => {
-  try {
-    const { day, meal, name, rollNo, complaint, token } = req.body;
+dotenv.config();
 
-    if (!day || !meal || !complaint) {
-      return res.status(400).json({ msg: 'Missing required fields' });
+const app = express();
+
+// CORS — allow your Vercel site (and local dev)
+app.use(cors({
+  origin: ['https://mess-feedback-pro.vercel.app', 'http://localhost:5173'],
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+app.use(express.json());
+
+// rate limit (tune if you test a lot)
+const limiter = rateLimit({ windowMs: 60 * 1000, max: 20 });
+app.use(limiter);
+
+// ✅ Keep routes simple; captcha is handled inside complaints.js
+app.use('/api/complaints', require('./routes/complaints'));
+app.use('/api/auth', require('./routes/auth'));
+
+app.get('/', (_req, res) => res.json({ status: 'ok', service: 'mess-feedback-backend' }));
+
+const { MONGO_URI = 'mongodb://127.0.0.1:27017/messFeedback', PORT = 5000 } = process.env;
+
+mongoose.connect(MONGO_URI)
+  .then(async () => {
+    console.log('MongoDB connected');
+
+    // default admin
+    const username = process.env.DEFAULT_ADMIN_USERNAME || 'HARSHIT';
+    const password = process.env.DEFAULT_ADMIN_PASSWORD || 'MANJUd12345@@';
+    const existing = await Admin.findOne({ username });
+    if (!existing) {
+      const hashed = await bcrypt.hash(password, 10);
+      await Admin.create({ username, password: hashed });
+      console.log('Default admin created ->', username);
+    } else {
+      console.log('Default admin exists ->', username);
     }
 
-    if (!token) {
-      return res.status(400).json({ msg: 'Captcha token missing' });
-    }
-
-    // ✅ Verify captcha
-    const secret = process.env.RECAPTCHA_SECRET_KEY;
-    const verifyURL = `https://www.google.com/recaptcha/api/siteverify`;
-
-    const { data } = await axios.post(
-      verifyURL,
-      new URLSearchParams({
-        secret,
-        response: token,
-      })
-    );
-
-    if (!data.success) {
-      console.error("Captcha failed:", data);
-      return res.status(400).json({ msg: 'Captcha verification failed' });
-    }
-
-    // ✅ Save complaint in DB
-    const doc = await Complaint.create({ day, meal, name, rollNo, complaint });
-    res.status(201).json({ msg: 'Complaint created', id: doc._id });
-
-  } catch (e) {
-    console.error('Complaint route error:', e.message);
-    res.status(500).json({ msg: e.message });
-  }
-});
-
-
-
-// list all - admin only
-router.get('/', auth, async (req, res) => {
-  try {
-    const items = await Complaint.find().sort({ createdAt: -1 });
-    res.json(items);
-  } catch (e) {
-    res.status(500).json({ msg: e.message });
-  }
-});
-
-// update status
-router.put('/:id', auth, async (req, res) => {
-  try {
-    const { status } = req.body;
-    const updated = await Complaint.findByIdAndUpdate(req.params.id, { status }, { new: true });
-    if (!updated) return res.status(404).json({ msg: 'Not found' });
-    res.json(updated);
-  } catch (e) {
-    res.status(500).json({ msg: e.message });
-  }
-});
-
-module.exports = router;
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+  })
+  .catch(err => { console.error('MongoDB connection error:', err); process.exit(1); });
